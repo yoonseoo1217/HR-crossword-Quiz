@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR / 인사관리 크로스워드 퀴즈</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:#f7f7f5;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem}
+.header{text-align:center;margin-bottom:1.5rem}
+.header h1{font-size:1.5rem;font-weight:700;color:#1a1a1a;letter-spacing:-0.02em}
+.header p{font-size:0.85rem;color:#888;margin-top:6px}
+.container{background:#fff;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);padding:2rem;max-width:720px;width:100%}
+.grid-wrap{display:flex;justify-content:center;margin-bottom:1.5rem;overflow-x:auto}
+.grid{display:inline-grid;gap:1px;background:#d4d4d4;border:1px solid #d4d4d4;border-radius:4px}
+.cell{width:42px;height:42px;position:relative;background:#f7f7f5}
+.cell.active{background:#fff}
+.cell .num{position:absolute;top:2px;left:3px;font-size:10px;color:#999;line-height:1;z-index:2;pointer-events:none}
+.cell input{width:100%;height:100%;border:none;background:transparent;text-align:center;font-size:18px;font-family:'Noto Sans KR',sans-serif;font-weight:500;color:#1a1a1a;outline:none;padding:0}
+.cell input:focus{background:#e8f0fe}
+.cell.correct input{background:#d4edda;color:#155724}
+.cell.wrong input{background:#f8d7da;color:#721c24}
+.toolbar{display:flex;justify-content:center;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap}
+.toolbar button{font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;font-weight:500;padding:8px 20px;border-radius:8px;border:1px solid #d4d4d4;background:#fff;color:#333;cursor:pointer;transition:all 0.15s}
+.toolbar button:hover{background:#f0f0f0;border-color:#aaa}
+.toolbar button.primary{background:#1a5fb4;color:#fff;border-color:#1a5fb4}
+.toolbar button.primary:hover{background:#164d94}
+.status{text-align:center;font-size:0.85rem;color:#666;min-height:22px;margin-bottom:1.5rem}
+.hints{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:600px){.hints{grid-template-columns:1fr}.cell{width:36px;height:36px}.cell input{font-size:16px}}
+.hints section h2{font-size:0.9rem;font-weight:700;color:#1a5fb4;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #e6f0fb}
+.hints .item{font-size:0.82rem;line-height:1.6;color:#555;margin-bottom:6px}
+.hints .item .n{color:#1a1a1a;font-weight:600}
+.footer{margin-top:2rem;font-size:0.75rem;color:#bbb;text-align:center}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>HR / 인사관리 크로스워드 퀴즈</h1>
+<p>칸을 클릭하고 한 글자씩 입력하세요 · 화살표 키로 이동</p>
+</div>
+<div class="container">
+<div class="toolbar">
+<button class="primary" id="checkBtn">정답 확인</button>
+<button id="hintBtn">한 글자 힌트</button>
+<button id="resetBtn">초기화</button>
+</div>
+<div class="status" id="status"></div>
+<div class="grid-wrap"><div class="grid" id="grid"></div></div>
+<div class="hints">
+<section><h2>가로 (Across)</h2><div id="acrossHints"></div></section>
+<section><h2>세로 (Down)</h2><div id="downHints"></div></section>
+</div>
+</div>
+<div class="footer">HR 크로스워드 퀴즈 · 학회 활동용</div>
+<script>
+var DATA={"rows":7,"cols":14,"words":[{"number":9,"word":"법정근로시간","hint":"법으로 정한 하루 또는 주당 최대 근로시간","row":3,"col":6,"direction":"A","length":6},{"number":2,"word":"구조조정","hint":"조직의 효율을 위해 인력과 조직을 재편하는 것","row":0,"col":7,"direction":"D","length":4},{"number":5,"word":"조직문화","hint":"조직 구성원이 공유하는 가치와 행동방식","row":1,"col":7,"direction":"A","length":4},{"number":3,"word":"수습기간","hint":"정식 채용 전 적합성을 확인하는 기간","row":0,"col":11,"direction":"D","length":4},{"number":1,"word":"욕구단계","hint":"매슬로우가 제시한 인간 욕구의 단계 구조","row":0,"col":6,"direction":"A","length":4},{"number":10,"word":"근속연수","hint":"한 직장에서 계속 근무한 기간","row":3,"col":8,"direction":"D","length":4},{"number":7,"word":"동기부여","hint":"구성원이 적극적으로 행동하도록 자극하는 것","row":2,"col":10,"direction":"A","length":4},{"number":13,"word":"연차휴가","hint":"근로자가 일정 근속 후 받는 유급휴가","row":5,"col":8,"direction":"A","length":4},{"number":6,"word":"노동조합","hint":"근로자들이 권익 보호를 위해 만든 단체","row":2,"col":5,"direction":"A","length":4},{"number":6,"word":"노사관계","hint":"노동자와 사용자 간의 관계","row":2,"col":5,"direction":"D","length":4},{"number":12,"word":"근로계약","hint":"근로조건을 명시한 사용자와 근로자 간의 법적 합의","row":5,"col":3,"direction":"A","length":4},{"number":8,"word":"초과근무","hint":"정해진 근무시간을 초과해서 일하는 것","row":3,"col":3,"direction":"D","length":4},{"number":14,"word":"교대근무","hint":"근무 시간을 나누어 교대로 일하는 형태","row":6,"col":0,"direction":"A","length":4},{"number":11,"word":"인사고과","hint":"직원의 능력과 성과를 정기적으로 평가하는 것","row":4,"col":0,"direction":"A","length":4},{"number":4,"word":"정리해고","hint":"경영상 이유로 인원을 줄이는 해고","row":1,"col":2,"direction":"D","length":4}]};
+
+var cellMap={},inputs={},startNums={};
+DATA.words.forEach(function(w){
+  for(var i=0;i<w.length;i++){
+    var r=w.row+(w.direction==='D'?i:0),c=w.col+(w.direction==='A'?i:0),k=r+'_'+c;
+    if(!cellMap[k])cellMap[k]={r:r,c:c,answer:w.word[i]};
+  }
+  var sk=w.row+'_'+w.col;
+  if(!(sk in startNums))startNums[sk]=w.number;
+});
+
+var grid=document.getElementById('grid');
+grid.style.gridTemplateRows='repeat('+DATA.rows+',42px)';
+grid.style.gridTemplateColumns='repeat('+DATA.cols+',42px)';
+
+for(var r=0;r<DATA.rows;r++){
+  for(var c=0;c<DATA.cols;c++){
+    var k=r+'_'+c,div=document.createElement('div');
+    div.className='cell';
+    if(!cellMap[k]){grid.appendChild(div);continue;}
+    div.className='cell active';
+    if(k in startNums){var num=document.createElement('span');num.className='num';num.textContent=startNums[k];div.appendChild(num);}
+    var inp=document.createElement('input');
+    inp.maxLength=1;inp.dataset.r=r;inp.dataset.c=c;inp.dataset.answer=cellMap[k].answer;
+    inp.autocomplete='off';inp.spellcheck=false;
+    inp.addEventListener('input',function(e){
+      var v=e.target.value;if(v.length>1)v=v[v.length-1];e.target.value=v;
+      e.target.parentElement.className='cell active';
+      document.getElementById('status').textContent='';
+      if(v)moveNext(e.target);
+    });
+    inp.addEventListener('keydown',function(e){
+      var rr=+e.target.dataset.r,cc=+e.target.dataset.c;
+      if(e.key==='ArrowRight'){focus(rr,cc+1);e.preventDefault();}
+      else if(e.key==='ArrowLeft'){focus(rr,cc-1);e.preventDefault();}
+      else if(e.key==='ArrowDown'){focus(rr+1,cc);e.preventDefault();}
+      else if(e.key==='ArrowUp'){focus(rr-1,cc);e.preventDefault();}
+      else if(e.key==='Backspace'&&!e.target.value){focus(rr,cc-1);e.preventDefault();}
+    });
+    div.appendChild(inp);grid.appendChild(div);inputs[k]=inp;
+  }
+}
+
+function focus(r,c){var i=inputs[r+'_'+c];if(i)i.focus();}
+function moveNext(el){
+  var r=+el.dataset.r,c=+el.dataset.c;
+  if(inputs[r+'_'+(c+1)]){inputs[r+'_'+(c+1)].focus();return;}
+  if(inputs[(r+1)+'_'+c]){inputs[(r+1)+'_'+c].focus();}
+}
+
+document.getElementById('checkBtn').addEventListener('click',function(){
+  var total=0,correct=0;
+  Object.keys(inputs).forEach(function(k){
+    var inp=inputs[k];total++;
+    var v=(inp.value||'').trim();
+    if(v===inp.dataset.answer){correct++;inp.parentElement.className='cell active correct';}
+    else if(v){inp.parentElement.className='cell active wrong';}
+    else{inp.parentElement.className='cell active';}
+  });
+  document.getElementById('status').textContent=correct+' / '+total+' 칸 정답'+
+    (correct===total?' 🎉 축하합니다! 전부 맞았어요!':'');
+});
+
+document.getElementById('hintBtn').addEventListener('click',function(){
+  var empty=[];
+  Object.keys(inputs).forEach(function(k){if(!inputs[k].value)empty.push(k);});
+  if(!empty.length){document.getElementById('status').textContent='모든 칸이 이미 채워져 있습니다';return;}
+  var pick=empty[Math.floor(Math.random()*empty.length)];
+  inputs[pick].value=inputs[pick].dataset.answer;
+  inputs[pick].parentElement.className='cell active correct';
+  document.getElementById('status').textContent='힌트: '+inputs[pick].dataset.answer+' (이)가 채워졌습니다';
+});
+
+document.getElementById('resetBtn').addEventListener('click',function(){
+  Object.keys(inputs).forEach(function(k){inputs[k].value='';inputs[k].parentElement.className='cell active';});
+  document.getElementById('status').textContent='';
+});
+
+var acrossDiv=document.getElementById('acrossHints'),downDiv=document.getElementById('downHints');
+var across=DATA.words.filter(function(w){return w.direction==='A';}).sort(function(a,b){return a.number-b.number;});
+var down=DATA.words.filter(function(w){return w.direction==='D';}).sort(function(a,b){return a.number-b.number;});
+across.forEach(function(w){
+  var d=document.createElement('div');d.className='item';
+  d.innerHTML='<span class="n">'+w.number+'.</span> '+w.hint+' ('+w.length+'글자)';
+  acrossDiv.appendChild(d);
+});
+down.forEach(function(w){
+  var d=document.createElement('div');d.className='item';
+  d.innerHTML='<span class="n">'+w.number+'.</span> '+w.hint+' ('+w.length+'글자)';
+  downDiv.appendChild(d);
+});
+</script>
+</body>
+</html>
